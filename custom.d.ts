@@ -4,7 +4,7 @@ declare namespace Express {
   export interface Response {
     // sendData: Api.DataSender;
     // sendItems: Api.ItemsSender;
-    sendError(error: Api.IResponseError["error"]): void;
+    sendError(error: Api.IResponseError): void;
   }
   export interface Request {
     query: Api.WithRandomId;
@@ -14,32 +14,26 @@ declare namespace Express {
 declare namespace Api {
   export type WithRandomId = { randomId?: string };
 
-  export interface IResponseItems<T = any> extends WithRandomId {
+  export type IResponseItems<T = {}> = WithRandomId & {
     items: T[];
     length: number;
     offset: number;
-  }
+  };
 
-  export interface IResponseData<T = any> extends WithRandomId {
-    data: T;
-  }
+  export type IResponseData<T = {}> = WithRandomId & T;
+  export type IResponseError = Error & { code?: number };
 
-  export interface IResponseError extends WithRandomId {
-    error: Error & { code?: number };
-  }
+  // type ItemsSender<T> = (items: T[], count: number, offset: number) => any;
 
-  type ItemsSender<T> = (items: T[], count: number, offset: number) => any;
+  // type DataSender<T> = (data: T) => any;
 
-  type DataSender<T> = (data: T) => any;
+  export type Response<T = any> = import("express").Response & {
+    sendData: (
+      data: T extends Array<infer I> ? IResponseItems<I> : IResponseData<T>
+    ) => void;
+  };
 
-  export type Response<T = IResponseItems> = import("express").Response &
-    (T extends IResponseItems<infer I>
-      ? { sendItems: ItemsSender<I> }
-      : T extends IResponseData<infer I>
-      ? { sendData: DataSender<I> }
-      : { sendData: DataSender<T>; sendItems: ItemsSender<T> });
-
-  export type Request<Q = {}, B = {}> = Omit<
+  export type Request<Q = any, B = any> = Omit<
     import("express").Request,
     "query" | "body"
   > & {
@@ -47,7 +41,7 @@ declare namespace Api {
     body: B;
   };
 
-  export type RequestHandler<Q = {}, B = {}, R = {}> = (
+  export type RequestHandler<Q = any, B = any, R = any> = (
     req: Request<Q, B>,
     res: Response<R>,
     next: (err?: any) => void

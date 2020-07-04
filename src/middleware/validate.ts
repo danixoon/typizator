@@ -1,4 +1,4 @@
-import { errors } from "../error";
+import { errors, createError } from "../error";
 import * as joi from "@hapi/joi";
 
 // const validate = (obj: any, schema: any) => {
@@ -20,9 +20,10 @@ export const query: <Q>(
   const result = schemaObject.validate(req.query);
   if (result.error)
     res.sendError(
-      errors.badRequest(
-        "Неверный параметр: " + result.error.message,
+      createError(
         "validate.bad_query",
+        "Неверный параметр: " + result.error.message,
+        400,
         { details: result.error.details[0] }
       )
     );
@@ -41,9 +42,10 @@ export const body: <B>(
   const result = schemaObject.validate(req.body);
   if (result.error)
     res.sendError(
-      errors.badRequest(
-        "Неверный параметр: " + result.error.message,
+      createError(
         "validate.bad_body",
+        "Неверный параметр: " + result.error.message,
+        400,
         { details: result.error.details[0] }
       )
     );
